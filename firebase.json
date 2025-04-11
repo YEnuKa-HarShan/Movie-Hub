@@ -1,1 +1,29 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"moviehub-b2ab5","appId":"1:907283981512:android:e779f264cfb08828ebf1fd","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"moviehub-b2ab5","configurations":{"android":"1:907283981512:android:e779f264cfb08828ebf1fd","ios":"1:907283981512:ios:a9127cc39f6bb024ebf1fd","macos":"1:907283981512:ios:a9127cc39f6bb024ebf1fd","web":"1:907283981512:web:da9f5629e5413506ebf1fd","windows":"1:907283981512:web:3fe5058d309a967febf1fd"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "moviehub-b2ab5",
+          "appId": "1:907283981512:android:e779f264cfb08828ebf1fd",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "moviehub-b2ab5",
+          "configurations": {
+            "android": "1:907283981512:android:e779f264cfb08828ebf1fd",
+            "ios": "1:907283981512:ios:a9127cc39f6bb024ebf1fd",
+            "macos": "1:907283981512:ios:a9127cc39f6bb024ebf1fd",
+            "web": "1:907283981512:web:da9f5629e5413506ebf1fd",
+            "windows": "1:907283981512:web:3fe5058d309a967febf1fd"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

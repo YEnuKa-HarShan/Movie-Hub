@@ -3,8 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/movie.dart';
-import 'edit_actor_screen.dart';
-import 'edit_movie_screen.dart';
+import 'edit_movie_form_screen.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
   final Movie movie;
@@ -292,43 +291,11 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => _handleDownload(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D3B66),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 4,
-                        shadowColor: Colors.blueAccent.withOpacity(0.3),
-                      ),
-                      child: const Text(
-                        'Download',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (userRole == 'Admin') ...[
-                    const SizedBox(height: 16),
+                  if (userRole != 'Admin') ...[
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditMovieScreen(movie: widget.movie),
-                            ),
-                          );
-                        },
+                        onPressed: () => _handleDownload(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0D3B66),
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -339,7 +306,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                           shadowColor: Colors.blueAccent.withOpacity(0.3),
                         ),
                         child: const Text(
-                          'Edit Movie',
+                          'Download',
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 16,
@@ -349,7 +316,8 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                  ],
+                  if (userRole == 'Admin') ...[
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -357,12 +325,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => EditActorScreen(
-                                movieId: widget.movie.id,
-                                actors: actors
-                                    .where((actor) => widget.movie.cast.contains(actor.name))
-                                    .toList(),
-                              ),
+                              builder: (context) => EditMovieFormScreen(movie: widget.movie),
                             ),
                           );
                         },
@@ -370,13 +333,13 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                           backgroundColor: const Color(0xFF0D3B66),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(50),
                           ),
                           elevation: 4,
                           shadowColor: Colors.blueAccent.withOpacity(0.3),
                         ),
                         child: const Text(
-                          'Edit Actors',
+                          'Edit',
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 16,

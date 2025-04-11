@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/movie.dart';
 import 'movie_details_screen.dart';
 
@@ -15,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Movie> filteredMovies = [];
   bool isSearchVisible = false;
   String selectedLanguage = '';
+  String? userRole;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -22,12 +24,21 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadUserRole();
+  }
+
+  Future<void> _loadUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userRole = prefs.getString('role') ?? 'User';
+      print('User role loaded: $userRole');
+    });
   }
 
   void _onScroll() {
     if (_scrollController.position.pixels ==
         _scrollController.position.maxScrollExtent) {
-      // Load more movies if needed (Firestore pagination can be added here)
+      // Pagination can be added here
     }
   }
 
@@ -215,10 +226,43 @@ class _HomeScreenState extends State<HomeScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
+                    print('Firestore error: ${snapshot.error}');
+                    if (snapshot.error.toString().contains('permission-denied')) {
+                      return const Center(
+                        child: Text(
+                          'Permission denied: Unable to load movies. Check your user role or contact support.',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    }
+                    return Center(
+                      child: Text(
+                        'Error loading movies: ${snapshot.error}',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text('No movies found'));
+                    return const Center(
+                      child: Text(
+                        'No movies found',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
                   }
                   movies = snapshot.data!.docs
                       .map((doc) => Movie.fromJson(doc.data() as Map<String, dynamic>))

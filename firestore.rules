@@ -1,0 +1,31 @@
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write, update: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.token.email)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.role == "Admin";
+    }
+
+    // Movies collection - Apply rules at collection level
+    match /movies/{movieId=**} {
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.token.email)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.role in ["Admin", "User"];
+      allow write, update: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.token.email)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.role == "Admin";
+    }
+
+    // Actors collection
+    match /actors/{actorId=**} {
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.token.email)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.role in ["Admin", "User"];
+      allow write, update: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.token.email)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.role == "Admin";
+    }
+  }
+}

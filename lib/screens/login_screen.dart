@@ -20,6 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
+    print('Login attempt with email: $email');
+
     if (email.isEmpty || password.isEmpty) {
       _showSnackBar('Please enter email and password');
       return;
@@ -27,60 +29,92 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       // Sign in with Firebase Auth
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      final user = userCredential.user;
+      print('Authenticated user: ${user?.email}, UID: ${user?.uid}');
+      if (user == null) {
+        _showSnackBar('Login failed: User not found');
+        return;
+      }
 
-      // Fetch user data from Firestore
+      // Fetch user data from Firestore using email as document ID
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(email)
           .get();
-
+      print('Firestore user doc exists: ${userDoc.exists}');
       if (!userDoc.exists) {
+        print('No user data found for $email');
         _showSnackBar('User data not found in Firestore');
         await FirebaseAuth.instance.signOut();
         return;
       }
 
       final userData = userDoc.data()!;
-      final username = userData['username'] as String;
-      final role = userData['role'] as String;
+      print('User data: $userData');
+      final username = userData['username'] as String? ?? 'Unknown';
+      // Normalize role: Convert 'user' to 'User', default to 'User' if null
+      final rawRole = userData['role'] as String? ?? 'User';
+      final role = rawRole.toLowerCase() == 'user' ? 'User' : rawRole;
+      print('Raw role from Firestore: $rawRole');
+      print('Normalized role: $role');
+      print('Saving role: $role, username: $username');
 
       // Save login data locally
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('username', username);
       await prefs.setString('role', role);
+      await prefs.setString('email', email); // Store email for debugging
 
       if (!mounted) return;
 
+      print('Navigating to HomeScreen');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
-        _showSnackBar('Invalid email or password');
+      print('Auth error: ${e.code} - ${e.message}');
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+        case 'wrong-password':
+          message = 'Invalid email or password';
+          break;
+        default:
+          message = 'Login failed: ${e.message}';
+      }
+      _showSnackBar(message);
+    } on FirebaseException catch (e) {
+      print('Firestore error: ${e.code} - ${e.message}');
+      if (e.code == 'permission-denied') {
+        _showSnackBar('Permission denied: Unable to access user data');
+        await FirebaseAuth.instance.signOut();
       } else {
-        _showSnackBar('Login failed: ${e.message}');
+        _showSnackBar('Firestore error: ${e.message}');
       }
     } catch (e) {
+      print('Unexpected error: $e');
       _showSnackBar('Error: $e');
     }
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.white),
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: const Color(0xFF00203F),
         ),
-        backgroundColor: const Color(0xFF00203F),
-      ),
-    );
+      );
+    }
   }
 
   @override
