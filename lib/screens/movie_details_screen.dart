@@ -107,6 +107,36 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     }
   }
 
+  List<TextSpan> _parseDescription(String description) {
+    final List<TextSpan> spans = [];
+    final RegExp boldRegex = RegExp(r'\*\*(.*?)\*\*');
+    int lastIndex = 0;
+
+    for (final match in boldRegex.allMatches(description)) {
+      if (match.start > lastIndex) {
+        spans.add(TextSpan(
+          text: description.substring(lastIndex, match.start),
+        ));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF00A8E8), // UI-matching blue accent color
+        ),
+      ));
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < description.length) {
+      spans.add(TextSpan(
+        text: description.substring(lastIndex),
+      ));
+    }
+
+    return spans;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -214,14 +244,21 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    widget.movie.description.isEmpty
-                        ? 'Description coming soon'
-                        : widget.movie.description,
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 16,
+                  RichText(
+                    textAlign: TextAlign.justify,
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 16,
+                      ),
+                      children: widget.movie.description.isEmpty
+                          ? [
+                              const TextSpan(
+                                text: 'Description coming soon',
+                              ),
+                            ]
+                          : _parseDescription(widget.movie.description),
                     ),
                   ),
                   const SizedBox(height: 24),

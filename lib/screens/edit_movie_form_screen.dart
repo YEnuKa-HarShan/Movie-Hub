@@ -22,7 +22,9 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
   final _portraitController = TextEditingController();
   final _teraboxLinkController = TextEditingController();
   List<TextEditingController> _genreControllers = [TextEditingController()];
-  List<TextEditingController> _castControllers = [TextEditingController()];
+  List<Map<String, TextEditingController>> _castControllers = [
+    {'cast': TextEditingController(), 'character': TextEditingController()}
+  ];
   String? _selectedTeraboxOption;
   bool _showLinkInput = false;
 
@@ -42,11 +44,44 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
     while (_genreControllers.length < 3) {
       _genreControllers.add(TextEditingController());
     }
-    _castControllers = widget.movie.cast.map((cast) => TextEditingController(text: cast)).toList();
-    if (_castControllers.isEmpty) {
-      _castControllers.add(TextEditingController());
-    }
+    _initializeCastControllers();
     _fetchMovieData();
+  }
+
+  Future<void> _initializeCastControllers() async {
+    try {
+      final actorsSnapshot = await FirebaseFirestore.instance.collection('actors').get();
+      final existingActors = actorsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return Actor.fromJson(data);
+      }).toList();
+
+      setState(() {
+        _castControllers = widget.movie.cast.map((cast) {
+          final actor = existingActors.firstWhere(
+            (a) => a.name == cast,
+            orElse: () => Actor(id: '', name: cast, image: '', roles: []),
+          );
+          final role = actor.roles.firstWhere(
+            (r) => r.movieId == widget.movie.id,
+            orElse: () => Role(movieId: widget.movie.id, character: ''),
+          );
+          return {
+            'cast': TextEditingController(text: cast),
+            'character': TextEditingController(text: role.character),
+          };
+        }).toList();
+        if (_castControllers.isEmpty) {
+          _castControllers.add({
+            'cast': TextEditingController(),
+            'character': TextEditingController(),
+          });
+        }
+      });
+    } catch (e) {
+      // Handle error silently
+    }
   }
 
   @override
@@ -61,8 +96,9 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
     for (var controller in _genreControllers) {
       controller.dispose();
     }
-    for (var controller in _castControllers) {
-      controller.dispose();
+    for (var map in _castControllers) {
+      map['cast']?.dispose();
+      map['character']?.dispose();
     }
     super.dispose();
   }
@@ -103,14 +139,17 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
 
   void _addCastField() {
     setState(() {
-      _castControllers.add(TextEditingController());
+      _castControllers.add({
+        'cast': TextEditingController(),
+        'character': TextEditingController(),
+      });
     });
   }
 
   Future<void> _updateMovie() async {
     try {
       final genres = _genreControllers.map((c) => c.text).where((g) => g.isNotEmpty).toList();
-      final cast = _castControllers.map((c) => c.text).where((c) => c.isNotEmpty).toList();
+      final cast = _castControllers.map((map) => map['cast']!.text).where((c) => c.isNotEmpty).toList();
       final teraboxLink = _selectedTeraboxOption == 'coming soon' ? 'coming soon' : _teraboxLinkController.text;
 
       // Update movie
@@ -134,7 +173,11 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
         return Actor.fromJson(data);
       }).toList();
 
-      for (var castName in cast) {
+      for (var i = 0; i < _castControllers.length; i++) {
+        final castName = _castControllers[i]['cast']!.text;
+        final character = _castControllers[i]['character']!.text;
+        if (castName.isEmpty) continue;
+
         final actor = existingActors.firstWhere(
           (a) => a.name == castName,
           orElse: () => Actor(id: '', name: castName, image: '', roles: []),
@@ -142,13 +185,13 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
         final roles = actor.id.isNotEmpty
             ? actor.roles.map((r) {
                 if (r.movieId == widget.movie.id) {
-                  return Role(movieId: r.movieId, character: castName);
+                  return Role(movieId: r.movieId, character: character.isNotEmpty ? character : castName);
                 }
                 return r;
               }).toList()
             : [];
         if (!roles.any((r) => r.movieId == widget.movie.id)) {
-          roles.add(Role(movieId: widget.movie.id, character: castName));
+          roles.add(Role(movieId: widget.movie.id, character: character.isNotEmpty ? character : castName));
         }
 
         if (actor.id.isEmpty) {
@@ -354,16 +397,31 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
             const SizedBox(height: 16),
             ..._castControllers.asMap().entries.map((entry) {
               final index = entry.key;
-              final controller = entry.value;
+              final controllers = entry.value;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: Row(
                   children: [
                     Expanded(
                       child: TextField(
-                        controller: controller,
+                        controller: controllers['cast'],
                         decoration: InputDecoration(
                           labelText: 'Cast ${index + 1}',
+                          labelStyle: const TextStyle(color: Colors.white70),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF0D3B66)),
+                          ),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: controllers['character'],
+                        decoration: InputDecoration(
+                          labelText: 'Character ${index + 1}',
                           labelStyle: const TextStyle(color: Colors.white70),
                           border: OutlineInputBorder(),
                           enabledBorder: OutlineInputBorder(
