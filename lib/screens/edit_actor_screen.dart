@@ -1,179 +1,180 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/movie.dart';
 
 class EditActorScreen extends StatefulWidget {
-  final String movieId;
-  final List<Actor> actors;
+  final Actor actor;
 
-  const EditActorScreen({super.key, required this.movieId, required this.actors});
+  const EditActorScreen({super.key, required this.actor});
 
   @override
-  _EditActorScreenState createState() => _EditActorScreenState();
+  State<EditActorScreen> createState() => _EditActorScreenState();
 }
 
 class _EditActorScreenState extends State<EditActorScreen> {
-  late List<TextEditingController> _nameControllers;
-  late List<TextEditingController> _imageControllers;
-  late List<TextEditingController> _characterControllers;
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _imageController;
 
   @override
   void initState() {
     super.initState();
-    _nameControllers = widget.actors
-        .map((actor) => TextEditingController(text: actor.name))
-        .toList();
-    _imageControllers = widget.actors
-        .map((actor) => TextEditingController(text: actor.image))
-        .toList();
-    _characterControllers = widget.actors
-        .map((actor) => TextEditingController(
-            text: actor.roles
-                .firstWhere((r) => r.movieId == widget.movieId)
-                .character))
-        .toList();
+    _nameController = TextEditingController(text: widget.actor.name);
+    _imageController = TextEditingController(text: widget.actor.image);
   }
 
   @override
   void dispose() {
-    for (var controller in _nameControllers) {
-      controller.dispose();
-    }
-    for (var controller in _imageControllers) {
-      controller.dispose();
-    }
-    for (var controller in _characterControllers) {
-      controller.dispose();
-    }
+    _nameController.dispose();
+    _imageController.dispose();
     super.dispose();
   }
 
-  Future<void> _updateActors() async {
-    try {
-      for (int i = 0; i < widget.actors.length; i++) {
-        final actor = widget.actors[i];
-        final updatedRoles = actor.roles.map((role) {
-          if (role.movieId == widget.movieId) {
-            return Role(
-              movieId: role.movieId,
-              character: _characterControllers[i].text,
-            );
-          }
-          return role;
-        }).toList();
-
-        await FirebaseFirestore.instance
-            .collection('actors')
-            .doc(actor.id)
-            .update({
-          'actor_name': _nameControllers[i].text,
-          'actor_image': _imageControllers[i].text,
-          'roles': updatedRoles
-              .map((r) => {'movie_id': r.movieId, 'character': r.character})
-              .toList(),
-        });
-      }
+  void _saveActor() {
+    if (_formKey.currentState!.validate()) {
+      // TODO: Implement Firestore update logic
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Actor details saved!',
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
+          ),
+          backgroundColor: Color(0xFF00203F),
+        ),
+      );
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Actors updated successfully!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating actors: $e')),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Actors'),
-        backgroundColor: const Color(0xFF00203F),
-      ),
       backgroundColor: const Color(0xFF0A1A2F),
+      appBar: AppBar(
+        title: const Text(
+          'Edit Actor',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: const Color(0xFF00203F),
+        elevation: 4,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: widget.actors.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    color: const Color(0xFF0D3B66),
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextField(
-                            controller: _nameControllers[index],
-                            decoration: const InputDecoration(
-                              labelText: 'Actor Name',
-                              labelStyle: TextStyle(color: Colors.white70),
-                              border: OutlineInputBorder(),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white30),
-                              ),
-                            ),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _imageControllers[index],
-                            decoration: const InputDecoration(
-                              labelText: 'Image Path',
-                              labelStyle: TextStyle(color: Colors.white70),
-                              border: OutlineInputBorder(),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white30),
-                              ),
-                            ),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _characterControllers[index],
-                            decoration: const InputDecoration(
-                              labelText: 'Character Name',
-                              labelStyle: TextStyle(color: Colors.white70),
-                              border: OutlineInputBorder(),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white30),
-                              ),
-                            ),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ],
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Actor Details',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _nameController,
+                  enabled: false, // Disable editing
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.white,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Actor Name',
+                    labelStyle: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF0D3B66),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Color(0xFF00A8E8)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the actor\'s name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _imageController,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.white,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Image File Name',
+                    labelStyle: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF0D3B66),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Color(0xFF00A8E8)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the image file name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _saveActor,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D3B66),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                      shadowColor: Colors.blueAccent.withOpacity(0.3),
+                    ),
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _updateActors,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D3B66),
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Update Actors',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

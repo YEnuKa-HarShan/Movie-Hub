@@ -211,23 +211,42 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
       }).toList();
 
       for (var i = 0; i < _castControllers.length; i++) {
-        final castName = _castControllers[i]['cast']!.text;
-        final character = _castControllers[i]['character']!.text;
+        final castName = _castControllers[i]['cast']!.text.trim();
+        final character = _castControllers[i]['character']!.text.trim();
         if (castName.isEmpty) continue;
 
+        // Check if actor exists
         final actor = existingActors.firstWhere(
-          (a) => a.name == castName,
+          (a) => a.name.toLowerCase() == castName.toLowerCase(),
           orElse: () => Actor(id: '', name: castName, image: '', roles: []),
         );
+
+        if (actor.id.isNotEmpty) {
+          // Actor exists, check roles
+          final existingRole = actor.roles.firstWhere(
+            (r) => r.movieId == widget.movie.id,
+            orElse: () => Role(movieId: '', character: ''),
+          );
+
+          if (existingRole.movieId == widget.movie.id && existingRole.character == character) {
+            // Role exists with same movie ID and character, skip update
+            continue;
+          }
+        }
+
+        // Either actor doesn't exist, or role needs to be added/updated
         final roles = actor.id.isNotEmpty
             ? actor.roles.map((r) {
                 if (r.movieId == widget.movie.id) {
+                  // Update existing role for this movie
                   return Role(movieId: r.movieId, character: character.isNotEmpty ? character : castName);
                 }
                 return r;
               }).toList()
             : [];
+
         if (!roles.any((r) => r.movieId == widget.movie.id)) {
+          // Add new role if none exists for this movie
           roles.add(Role(movieId: widget.movie.id, character: character.isNotEmpty ? character : castName));
         }
 

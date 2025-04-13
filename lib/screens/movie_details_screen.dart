@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/movie.dart';
 import 'edit_movie_form_screen.dart';
+import 'actor_details_screen.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
   final Movie movie;
@@ -122,7 +123,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
         text: match.group(1),
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00A8E8), // UI-matching blue accent color
+          color: Color(0xFF00A8E8),
         ),
       ));
       lastIndex = match.end;
@@ -293,35 +294,56 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                         return SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
-                            children: castDisplay.map((cast) => Padding(
-                              padding: const EdgeInsets.only(right: 16),
-                              child: Column(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 40,
-                                    backgroundImage: AssetImage('assets/actors/${cast.image}'),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    cast.actorName,
-                                    style: const TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontSize: 14,
+                            children: castDisplay.map((cast) {
+                              final actor = actors.firstWhere(
+                                (a) => a.name == cast.actorName,
+                                orElse: () => Actor(
+                                  id: 'unknown',
+                                  name: cast.actorName,
+                                  image: cast.image,
+                                  roles: [],
+                                ),
+                              );
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ActorDetailsScreen(actor: actor),
                                     ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: Column(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 40,
+                                        backgroundImage: AssetImage('assets/actors/${cast.image}'),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        cast.actorName,
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Text(
+                                        cast.characterName,
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          color: Colors.white.withOpacity(0.7),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    cast.characterName,
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      color: Colors.white.withOpacity(0.7),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )).toList(),
+                                ),
+                              );
+                            }).toList(),
                           ),
                         );
                       },

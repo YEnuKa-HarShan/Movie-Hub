@@ -1,7 +1,7 @@
 class Movie {
   final String id;
   final String title;
-  final String description; // Added description field
+  final String description;
   final String year;
   final String language;
   final List<String> genre;
@@ -13,7 +13,7 @@ class Movie {
   Movie({
     required this.id,
     required this.title,
-    required this.description, // Added
+    required this.description,
     required this.year,
     required this.language,
     required this.genre,
@@ -25,9 +25,9 @@ class Movie {
 
   factory Movie.fromJson(Map<String, dynamic> json) {
     return Movie(
-      id: json['id']?.toString() ?? 'unknown_id', // Firestore එකේ string/int වෙන්න පුළුවන්
-      title: json['title'] ?? json['Title'] ?? 'Unknown Title', // Both cases handled
-      description: json['description'] ?? 'No description available', // Added
+      id: json['id']?.toString() ?? 'unknown_id',
+      title: json['title'] ?? json['Title'] ?? 'Unknown Title',
+      description: json['description'] ?? 'No description available',
       year: json['year'] ?? json['Year'] ?? 'Unknown Year',
       language: json['language'] ?? json['Language'] ?? 'Unknown Language',
       genre: List<String>.from(json['genre'] ?? json['Genre'] ?? []),
@@ -37,10 +37,25 @@ class Movie {
       cast: List<String>.from(json['cast'] ?? []),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'year': year,
+      'language': language,
+      'genre': genre,
+      'portrait': portrait,
+      'landscape': landscape,
+      'terabox_link': teraboxLink,
+      'cast': cast,
+    };
+  }
 }
 
 class Actor {
-  final String id; // Added id field
+  final String id;
   final String name;
   final String image;
   final List<Role> roles;
@@ -54,11 +69,22 @@ class Actor {
 
   factory Actor.fromJson(Map<String, dynamic> json) {
     return Actor(
-      id: json['id']?.toString() ?? 'unknown_id', // Added
-      name: json['actor_name'] ?? 'Unknown Actor',
-      image: json['actor_image'] ?? 'default_actor.jpg',
-      roles: (json['roles'] as List? ?? []).map((r) => Role.fromJson(r)).toList(),
+      id: json['id']?.toString() ?? 'unknown_id',
+      name: json['actor_name'] ?? json['name'] ?? 'Unknown Actor',
+      image: json['actor_image'] ?? json['image'] ?? 'default_actor.jpg',
+      roles: (json['roles'] as List<dynamic>? ?? [])
+          .map((r) => Role.fromJson(r as Map<String, dynamic>))
+          .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'actor_name': name,
+      'actor_image': image,
+      'roles': roles.map((role) => role.toJson()).toList(),
+    };
   }
 }
 
@@ -70,9 +96,16 @@ class Role {
 
   factory Role.fromJson(Map<String, dynamic> json) {
     return Role(
-      movieId: json['movie_id'] ?? 'unknown_movie',
+      movieId: json['movie_id']?.toString() ?? 'unknown_movie',
       character: json['character'] ?? 'Unknown Character',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'movie_id': movieId,
+      'character': character,
+    };
   }
 }
 
