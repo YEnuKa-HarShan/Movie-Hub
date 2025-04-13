@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:ui'; // For blur effect
 import '../models/movie.dart';
 import 'movie_details_screen.dart';
 
@@ -17,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isSearchVisible = false;
   String selectedLanguage = '';
   String? userRole;
+  String selectedMenuItem = 'Home'; // Track selected menu item
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -70,6 +72,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return true;
   }
 
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Logged out successfully')),
+      );
+      // Navigate to login screen and remove all previous routes
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login', // Route name defined in main.dart
+        (Route<dynamic> route) => false, // Removes all previous routes
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -114,30 +132,156 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         drawer: Drawer(
-          child: Container(
-            color: const Color(0xFF00203F),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: const [
-                DrawerHeader(
-                  decoration: BoxDecoration(color: Color(0xFF0D3B66)),
-                  child: Text(
-                    'Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontFamily: 'Poppins',
+          child: Stack(
+            children: [
+              // Glass blur background
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                child: Container(
+                  color: const Color(0xFF0A1A2F).withOpacity(0.5), // Match home background
+                ),
+              ),
+              // Drawer content
+              Column(
+                children: [
+                  // Drawer Header
+                  Container(
+                    height: 160,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF00203F), Color(0xFF0D3B66)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.movie_filter,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Discover Movies',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontSize: 22,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.blueAccent.withOpacity(0.4),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                  // Menu Items
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      children: [
+                        _buildMenuItem(
+                          icon: Icons.home,
+                          title: 'Home',
+                          isSelected: selectedMenuItem == 'Home',
+                          onTap: () {
+                            setState(() {
+                              selectedMenuItem = 'Home';
+                            });
+                            Navigator.pop(context);
+                          },
+                        ),
+                        _buildMenuItem(
+                          icon: Icons.person,
+                          title: 'Profile',
+                          isSelected: selectedMenuItem == 'Profile',
+                          onTap: () {
+                            setState(() {
+                              selectedMenuItem = 'Profile';
+                            });
+                            Navigator.pop(context);
+                          },
+                        ),
+                        _buildMenuItem(
+                          icon: Icons.settings,
+                          title: 'Settings',
+                          isSelected: selectedMenuItem == 'Settings',
+                          onTap: () {
+                            setState(() {
+                              selectedMenuItem = 'Settings';
+                            });
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Logout Button
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: GestureDetector(
+                      onTap: _logout,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF00203F), Color(0xFF0D3B66)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.logout, color: Color(0xFFFF4D4D), size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Logout',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFFFF4D4D),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         body: Column(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               color: Colors.black.withOpacity(0.3),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -277,12 +421,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       .toList();
                   return GridView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 2 / 3.5,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
+                      crossAxisCount: 3,
+                      childAspectRatio: 2 / 3.8,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
                     ),
                     itemCount: filteredMovies.length,
                     itemBuilder: (context, index) {
@@ -299,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(10),
                             gradient: LinearGradient(
                               colors: [Colors.blueGrey.shade900, Colors.black87],
                               begin: Alignment.topLeft,
@@ -308,8 +452,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
@@ -320,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Stack(
                                   children: [
                                     ClipRRect(
-                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
                                       child: Image.asset(
                                         'assets/portrait/${movie.portrait}',
                                         fit: BoxFit.cover,
@@ -329,17 +473,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     Positioned(
-                                      top: 8,
-                                      right: 8,
+                                      top: 6,
+                                      right: 6,
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                         decoration: BoxDecoration(
                                           color: Colors.redAccent.withOpacity(0.9),
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(5),
                                           boxShadow: [
                                             BoxShadow(
                                               color: Colors.red.withOpacity(0.5),
-                                              blurRadius: 4,
+                                              blurRadius: 3,
                                             ),
                                           ],
                                         ),
@@ -349,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             fontFamily: 'Poppins',
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white,
-                                            fontSize: 12,
+                                            fontSize: 10,
                                           ),
                                         ),
                                       ),
@@ -358,19 +502,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(6.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     SizedBox(
-                                      height: 40,
+                                      height: 32,
                                       child: Text(
                                         movie.title,
                                         style: const TextStyle(
                                           fontFamily: 'Poppins',
                                           fontWeight: FontWeight.w600,
                                           color: Colors.white,
-                                          fontSize: 14,
+                                          fontSize: 12,
                                         ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
@@ -381,7 +525,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       style: TextStyle(
                                         fontFamily: 'Poppins',
                                         color: Colors.white.withOpacity(0.8),
-                                        fontSize: 12,
+                                        fontSize: 10,
                                       ),
                                     ),
                                   ],
@@ -427,6 +571,63 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 14,
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isSelected
+                ? [const Color(0xFF00203F), const Color(0xFF0D3B66)]
+                : [
+                    Colors.blueGrey.shade900.withOpacity(0.2),
+                    Colors.black87.withOpacity(0.2),
+                  ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? Colors.blueAccent.withOpacity(0.3)
+                  : Colors.black.withOpacity(0.2),
+              blurRadius: isSelected ? 6 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? const Color(0xFF00A8E8) : Colors.white.withOpacity(0.9),
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: isSelected ? const Color(0xFF00A8E8) : Colors.white.withOpacity(0.9),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
