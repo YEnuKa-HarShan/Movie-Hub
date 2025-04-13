@@ -27,6 +27,7 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
   ];
   String? _selectedTeraboxOption;
   bool _showLinkInput = false;
+  int _descLines = 1; // Track number of lines in description
 
   @override
   void initState() {
@@ -46,6 +47,40 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
     }
     _initializeCastControllers();
     _fetchMovieData();
+
+    // Add listeners to update landscape and portrait fields
+    _titleController.addListener(_updateImageFields);
+    _yearController.addListener(_updateImageFields);
+
+    // Initialize description lines and add listener
+    _updateDescLines();
+    _descController.addListener(_updateDescLines);
+  }
+
+  // Function to update landscape and portrait fields
+  void _updateImageFields() {
+    final title = _titleController.text.trim();
+    final year = _yearController.text.trim();
+    if (title.isNotEmpty && year.isNotEmpty) {
+      setState(() {
+        _landscapeController.text = '$title $year.jpg';
+        _portraitController.text = '$title $year.jpg';
+      });
+    } else {
+      setState(() {
+        _landscapeController.text = '';
+        _portraitController.text = '';
+      });
+    }
+  }
+
+  // Function to calculate and update description lines
+  void _updateDescLines() {
+    final text = _descController.text;
+    final lineCount = '\n'.allMatches(text).length + 1;
+    setState(() {
+      _descLines = lineCount.clamp(1, 5); // Limit to 1-5 lines for usability
+    });
   }
 
   Future<void> _initializeCastControllers() async {
@@ -86,6 +121,9 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
 
   @override
   void dispose() {
+    _titleController.removeListener(_updateImageFields);
+    _yearController.removeListener(_updateImageFields);
+    _descController.removeListener(_updateDescLines);
     _titleController.dispose();
     _yearController.dispose();
     _descController.dispose();
@@ -119,8 +157,7 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
                 _genreControllers[i].text = genres[i];
               }
             }
-            _landscapeController.text = '${_titleController.text} ${_yearController.text}.jpg';
-            _portraitController.text = '${_titleController.text} ${_yearController.text}.jpg';
+            // Landscape and portrait are now handled by _updateImageFields
           });
         }
       } catch (e) {
@@ -252,7 +289,6 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
                 ),
               ),
               style: const TextStyle(color: Colors.white),
-              onChanged: (value) => _fetchMovieData(),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -266,7 +302,6 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
                 ),
               ),
               style: const TextStyle(color: Colors.white),
-              onChanged: (value) => _fetchMovieData(),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -280,7 +315,7 @@ class _EditMovieFormScreenState extends State<EditMovieFormScreen> {
                 ),
               ),
               style: const TextStyle(color: Colors.white),
-              maxLines: 3,
+              maxLines: _descLines,
             ),
             const SizedBox(height: 16),
             TextField(
