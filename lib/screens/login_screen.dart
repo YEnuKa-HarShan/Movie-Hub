@@ -1,6 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 
@@ -20,85 +20,41 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    print('Login attempt with email: $email');
-
     if (email.isEmpty || password.isEmpty) {
       _showSnackBar('Please enter email and password');
       return;
     }
 
     try {
-      // Sign in with Firebase Auth
-      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      // Load users from JSON
+      final String response = await DefaultAssetBundle.of(context).loadString('assets/users/users.json');
+      final List<dynamic> users = jsonDecode(response);
+
+      // Find user with matching email and password
+      final user = users.firstWhere(
+        (u) => u['email'] == email && u['password'] == password,
+        orElse: () => null,
       );
-      final user = userCredential.user;
-      print('Authenticated user: ${user?.email}, UID: ${user?.uid}');
+
       if (user == null) {
-        _showSnackBar('Login failed: User not found');
+        _showSnackBar('Invalid email or password');
         return;
       }
-
-      // Fetch user data from Firestore using email as document ID
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(email)
-          .get();
-      print('Firestore user doc exists: ${userDoc.exists}');
-      if (!userDoc.exists) {
-        print('No user data found for $email');
-        _showSnackBar('User data not found in Firestore');
-        await FirebaseAuth.instance.signOut();
-        return;
-      }
-
-      final userData = userDoc.data()!;
-      print('User data: $userData');
-      final username = userData['username'] as String? ?? 'Unknown';
-      // Normalize role: Convert 'user' to 'User', default to 'User' if null
-      final rawRole = userData['role'] as String? ?? 'User';
-      final role = rawRole.toLowerCase() == 'user' ? 'User' : rawRole;
-      print('Raw role from Firestore: $rawRole');
-      print('Normalized role: $role');
-      print('Saving role: $role, username: $username');
 
       // Save login data locally
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('username', username);
-      await prefs.setString('role', role);
-      await prefs.setString('email', email); // Store email for debugging
+      await prefs.setString('username', user['username'] ?? 'Unknown');
+      await prefs.setString('email', email);
 
       if (!mounted) return;
 
-      print('Navigating to HomeScreen');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
-    } on FirebaseAuthException catch (e) {
-      print('Auth error: ${e.code} - ${e.message}');
-      String message;
-      switch (e.code) {
-        case 'user-not-found':
-        case 'wrong-password':
-          message = 'Invalid email or password';
-          break;
-        default:
-          message = 'Login failed: ${e.message}';
-      }
-      _showSnackBar(message);
-    } on FirebaseException catch (e) {
-      print('Firestore error: ${e.code} - ${e.message}');
-      if (e.code == 'permission-denied') {
-        _showSnackBar('Permission denied: Unable to access user data');
-        await FirebaseAuth.instance.signOut();
-      } else {
-        _showSnackBar('Firestore error: ${e.message}');
-      }
     } catch (e) {
-      print('Unexpected error: $e');
+      print('Error during login: $e');
       _showSnackBar('Error: $e');
     }
   }

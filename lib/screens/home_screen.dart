@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:ui'; // For blur effect
+import 'dart:convert';
+import 'package:flutter/services.dart';
+import 'dart:ui';
 import '../models/movie.dart';
 import 'movie_details_screen.dart';
 
@@ -17,8 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Movie> filteredMovies = [];
   bool isSearchVisible = false;
   String selectedLanguage = '';
-  String? userRole;
-  String selectedMenuItem = 'Home'; // Track selected menu item
+  String selectedMenuItem = 'Home';
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -26,21 +26,25 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _loadUserRole();
+    _loadMovies();
   }
 
-  Future<void> _loadUserRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userRole = prefs.getString('role') ?? 'User';
-      print('User role loaded: $userRole');
-    });
+  Future<void> _loadMovies() async {
+    try {
+      final String response = await DefaultAssetBundle.of(context).loadString('assets/movies/movies.json');
+      final List<dynamic> data = jsonDecode(response);
+      setState(() {
+        movies = data.map((json) => Movie.fromJson(json)).toList();
+        filteredMovies = movies;
+      });
+    } catch (e) {
+      print('Error loading movies: $e');
+    }
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
-      // Pagination can be added here
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      // Pagination can be added here if needed
     }
   }
 
@@ -79,11 +83,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Logged out successfully')),
       );
-      // Navigate to login screen and remove all previous routes
       Navigator.pushNamedAndRemoveUntil(
         context,
-        '/login', // Route name defined in main.dart
-        (Route<dynamic> route) => false, // Removes all previous routes
+        '/login',
+        (Route<dynamic> route) => false,
       );
     }
   }
@@ -134,17 +137,14 @@ class _HomeScreenState extends State<HomeScreen> {
         drawer: Drawer(
           child: Stack(
             children: [
-              // Glass blur background
               BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                 child: Container(
-                  color: const Color(0xFF0A1A2F).withOpacity(0.5), // Match home background
+                  color: const Color(0xFF0A1A2F).withOpacity(0.5),
                 ),
               ),
-              // Drawer content
               Column(
                 children: [
-                  // Drawer Header
                   Container(
                     height: 160,
                     width: double.infinity,
@@ -191,7 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  // Menu Items
                   Expanded(
                     child: ListView(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -232,7 +231,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  // Logout Button
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: GestureDetector(
@@ -363,182 +361,137 @@ class _HomeScreenState extends State<HomeScreen> {
                   : const SizedBox.shrink(),
             ),
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('movies').snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    print('Firestore error: ${snapshot.error}');
-                    if (snapshot.error.toString().contains('permission-denied')) {
-                      return const Center(
-                        child: Text(
-                          'Permission denied: Unable to load movies. Check your user role or contact support.',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      );
-                    }
-                    return Center(
-                      child: Text(
-                        'Error loading movies: ${snapshot.error}',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    );
-                  }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No movies found',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
-                    );
-                  }
-                  movies = snapshot.data!.docs
-                      .map((doc) => Movie.fromJson(doc.data() as Map<String, dynamic>))
-                      .toList();
-                  filteredMovies = movies
-                      .where((movie) =>
-                          movie.title
-                              .toLowerCase()
-                              .contains(_searchController.text.toLowerCase()) &&
-                          (selectedLanguage.isEmpty ||
-                              movie.language == selectedLanguage))
-                      .toList();
-                  return GridView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(12),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 2 / 3.8,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemCount: filteredMovies.length,
-                    itemBuilder: (context, index) {
-                      final movie = filteredMovies[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MovieDetailsScreen(movie: movie),
+              child: movies.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredMovies.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No movies found',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              color: Colors.white,
+                              fontSize: 16,
                             ),
-                          );
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            gradient: LinearGradient(
-                              colors: [Colors.blueGrey.shade900, Colors.black87],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.4),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                                      child: Image.asset(
-                                        'assets/portrait/${movie.portrait}',
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 6,
-                                      right: 6,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: Colors.redAccent.withOpacity(0.9),
-                                          borderRadius: BorderRadius.circular(5),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.red.withOpacity(0.5),
-                                              blurRadius: 3,
-                                            ),
-                                          ],
-                                        ),
-                                        child: Text(
-                                          movie.language,
-                                          style: const TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                          ),
-                                        ),
-                                      ),
+                        )
+                      : GridView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(12),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 2 / 3.8,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                          itemCount: filteredMovies.length,
+                          itemBuilder: (context, index) {
+                            final movie = filteredMovies[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MovieDetailsScreen(movie: movie),
+                                  ),
+                                );
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  gradient: LinearGradient(
+                                    colors: [Colors.blueGrey.shade900, Colors.black87],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.4),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
                                     ),
                                   ],
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(6.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    SizedBox(
-                                      height: 32,
-                                      child: Text(
-                                        movie.title,
-                                        style: const TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                                    Expanded(
+                                      child: Stack(
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                            child: Image.asset(
+                                              'assets/portrait/${movie.portrait}',
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 6,
+                                            right: 6,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: Colors.redAccent.withOpacity(0.9),
+                                                borderRadius: BorderRadius.circular(5),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.red.withOpacity(0.5),
+                                                    blurRadius: 3,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Text(
+                                                movie.language,
+                                                style: const TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    Text(
-                                      movie.year,
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        color: Colors.white.withOpacity(0.8),
-                                        fontSize: 10,
+                                    Padding(
+                                      padding: const EdgeInsets.all(6.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          SizedBox(
+                                            height: 32,
+                                            child: Text(
+                                              movie.title,
+                                              style: const TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          Text(
+                                            movie.year,
+                                            style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                              color: Colors.white.withOpacity(0.8),
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
             ),
           ],
         ),

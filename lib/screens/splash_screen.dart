@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final isFirstLoad = prefs.getBool('isFirstLoad') ?? true;
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-    await Future.delayed(const Duration(seconds: 3)); // 3-second delay
+    await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
           image: DecorationImage(
             image: AssetImage('assets/Background.jpg'),
             fit: BoxFit.cover,
-            opacity: 1.0, // Background image at 100% opacity
+            opacity: 1.0,
           ),
         ),
         child: Stack(

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import '../models/movie.dart';
-import 'edit_movie_form_screen.dart';
 import 'actor_details_screen.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
@@ -18,19 +17,24 @@ class MovieDetailsScreen extends StatefulWidget {
 class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   List<Actor> actors = [];
   List<CastDisplay> castDisplay = [];
-  String? userRole;
 
   @override
   void initState() {
     super.initState();
-    _loadUserRole();
+    _loadActors();
   }
 
-  Future<void> _loadUserRole() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userRole = prefs.getString('role');
-    });
+  Future<void> _loadActors() async {
+    try {
+      final String response = await DefaultAssetBundle.of(context).loadString('assets/actors/actors.json');
+      final List<dynamic> data = jsonDecode(response);
+      setState(() {
+        actors = data.map((json) => Actor.fromJson(json)).toList();
+        _prepareCastDisplay();
+      });
+    } catch (e) {
+      print('Error loading actors: $e');
+    }
   }
 
   void _prepareCastDisplay() {
@@ -275,140 +279,89 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 120,
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance.collection('actors').snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        if (snapshot.hasError) {
-                          return Center(child: Text('Error: ${snapshot.error}'));
-                        }
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return const Center(child: Text('No actors found'));
-                        }
-                        actors = snapshot.data!.docs
-                            .map((doc) => Actor.fromJson(doc.data() as Map<String, dynamic>))
-                            .toList();
-                        _prepareCastDisplay();
-                        return SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: castDisplay.map((cast) {
-                              final actor = actors.firstWhere(
-                                (a) => a.name == cast.actorName,
-                                orElse: () => Actor(
-                                  id: 'unknown',
-                                  name: cast.actorName,
-                                  image: cast.image,
-                                  roles: [],
-                                ),
-                              );
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ActorDetailsScreen(actor: actor),
-                                    ),
-                                  );
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 16),
-                                  child: Column(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 40,
-                                        backgroundImage: AssetImage('assets/actors/${cast.image}'),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        cast.actorName,
-                                        style: const TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      Text(
-                                        cast.characterName,
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          color: Colors.white.withOpacity(0.7),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
+                    child: actors.isEmpty
+                        ? const Center(child: CircularProgressIndicator())
+                        : SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: castDisplay.map((cast) {
+                                final actor = actors.firstWhere(
+                                  (a) => a.name == cast.actorName,
+                                  orElse: () => Actor(
+                                    id: 'unknown',
+                                    name: cast.actorName,
+                                    image: cast.image,
+                                    roles: [],
                                   ),
-                                ),
-                              );
-                            }).toList(),
+                                );
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ActorDetailsScreen(actor: actor),
+                                      ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 16),
+                                    child: Column(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 40,
+                                          backgroundImage: AssetImage('assets/actors/${cast.image}'),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          cast.actorName,
+                                          style: const TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        Text(
+                                          cast.characterName,
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            color: Colors.white.withOpacity(0.7),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
                           ),
-                        );
-                      },
-                    ),
                   ),
                   const SizedBox(height: 24),
-                  if (userRole != 'Admin') ...[
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => _handleDownload(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0D3B66),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 4,
-                          shadowColor: Colors.blueAccent.withOpacity(0.3),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _handleDownload(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0D3B66),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
-                          'Download',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                        elevation: 4,
+                        shadowColor: Colors.blueAccent.withOpacity(0.3),
+                      ),
+                      child: const Text(
+                        'Download',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                  ],
-                  if (userRole == 'Admin') ...[
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditMovieFormScreen(movie: widget.movie),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0D3B66),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          elevation: 4,
-                          shadowColor: Colors.blueAccent.withOpacity(0.3),
-                        ),
-                        child: const Text(
-                          'Edit',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
