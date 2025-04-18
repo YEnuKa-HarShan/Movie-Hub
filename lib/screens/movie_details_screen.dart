@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+// ignore: unused_import
+import 'package:animate_do/animate_do.dart';
+import 'package:glass_kit/glass_kit.dart';
 import '../models/movie.dart';
 import 'actor_details_screen.dart';
 
@@ -26,7 +29,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
 
   Future<void> _loadActors() async {
     try {
-      final String response = await DefaultAssetBundle.of(context).loadString('assets/actors/actors.json');
+      final String response = await DefaultAssetBundle.of(context).loadString('assets/actors.json');
       final List<dynamic> data = jsonDecode(response);
       setState(() {
         actors = data.map((json) => Actor.fromJson(json)).toList();
@@ -57,40 +60,54 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     if (widget.movie.teraboxLink == null || widget.movie.teraboxLink!.toLowerCase() == "coming soon") {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF0A1A2F),
-          title: const Text(
-            'Coming Soon',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 20,
+        builder: (BuildContext context) {
+          return GlassContainer(
+            height: 200,
+            width: MediaQuery.of(context).size.width * 0.8,
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.2),
+                Colors.white.withOpacity(0.1),
+              ],
             ),
-          ),
-          content: const Text(
-            'This movie will be available soon!',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              color: Colors.white70,
-              fontSize: 16,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'OK',
+            borderColor: Colors.white.withOpacity(0.3),
+            blur: 10,
+            borderRadius: BorderRadius.circular(12),
+            child: AlertDialog(
+              backgroundColor: Colors.transparent,
+              title: const Text(
+                'Coming Soon',
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  color: Color(0xFF00A8E8),
-                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 20,
                 ),
               ),
+              content: const Text(
+                'This movie will be available soon!',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Color(0xFF3B82F6),
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+          );
+        },
       );
     } else {
       final Uri url = Uri.parse(widget.movie.teraboxLink!);
@@ -104,7 +121,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                 'Could not launch the link',
                 style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
               ),
-              backgroundColor: Color(0xFF00203F),
+              backgroundColor: Color(0xFF1A2A44),
             ),
           );
         }
@@ -127,7 +144,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
         text: match.group(1),
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          color: Color(0xFF00A8E8),
+          color: Color(0xFFF59E0B),
         ),
       ));
       lastIndex = match.end;
@@ -145,22 +162,35 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1A2F),
+      backgroundColor: const Color(0xFF0F172A),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 300.0,
+            expandedHeight: 350.0,
             floating: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                widget.movie.title,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 20,
-                  shadows: [Shadow(color: Colors.black26, blurRadius: 4)],
+              title: GlassContainer(
+                height: 40,
+                width: 200,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.2),
+                    Colors.white.withOpacity(0.1),
+                  ],
+                ),
+                borderColor: Colors.white.withOpacity(0.3),
+                blur: 10,
+                borderRadius: BorderRadius.circular(12),
+                child: Text(
+                  widget.movie.title,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
                 ),
               ),
               background: Stack(
@@ -177,7 +207,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          const Color(0xFF0A1A2F).withOpacity(0.9),
+                          const Color(0xFF0F172A).withOpacity(0.9),
                         ],
                       ),
                     ),
@@ -185,7 +215,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                 ],
               ),
             ),
-            backgroundColor: const Color(0xFF00203F),
+            backgroundColor: const Color(0xFF1A2A44),
             elevation: 4,
           ),
           SliverToBoxAdapter(
@@ -197,18 +227,19 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
+                      GlassContainer(
+                        height: 30,
+                        width: 100,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.red.withOpacity(0.5),
-                              blurRadius: 4,
-                            ),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.red.withOpacity(0.3),
+                            Colors.red.withOpacity(0.2),
                           ],
                         ),
+                        borderColor: Colors.red.withOpacity(0.3),
+                        blur: 5,
+                        borderRadius: BorderRadius.circular(6),
                         child: Text(
                           widget.movie.language,
                           style: const TextStyle(
@@ -278,89 +309,154 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 120,
+                    height: 140,
                     child: actors.isEmpty
                         ? const Center(child: CircularProgressIndicator())
-                        : SingleChildScrollView(
+                        : ListView.builder(
                             scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: castDisplay.map((cast) {
-                                final actor = actors.firstWhere(
-                                  (a) => a.name == cast.actorName,
-                                  orElse: () => Actor(
-                                    id: 'unknown',
-                                    name: cast.actorName,
-                                    image: cast.image,
-                                    roles: [],
-                                  ),
-                                );
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ActorDetailsScreen(actor: actor),
-                                      ),
-                                    );
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 16),
+                            itemCount: castDisplay.length,
+                            itemBuilder: (context, index) {
+                              final cast = castDisplay[index];
+                              final actor = actors.firstWhere(
+                                (a) => a.name == cast.actorName,
+                                orElse: () => Actor(
+                                  id: 'unknown',
+                                  name: cast.actorName,
+                                  image: cast.image,
+                                  roles: [],
+                                ),
+                              );
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ActorDetailsScreen(actor: actor),
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: GlassContainer(
+                                    height: 140,
+                                    width: 100,
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.white.withOpacity(0.2),
+                                        Colors.white.withOpacity(0.1),
+                                      ],
+                                    ),
+                                    borderColor: Colors.white.withOpacity(0.3),
+                                    blur: 10,
+                                    borderRadius: BorderRadius.circular(12),
                                     child: Column(
                                       children: [
-                                        CircleAvatar(
-                                          radius: 40,
-                                          backgroundImage: AssetImage('assets/actors/${cast.image}'),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          cast.actorName,
-                                          style: const TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                            fontSize: 14,
+                                        ClipRRect(
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                          child: Image.asset(
+                                            'assets/actors/${cast.image}',
+                                            width: 100,
+                                            height: 80,
+                                            fit: BoxFit.cover,
                                           ),
                                         ),
-                                        Text(
-                                          cast.characterName,
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            color: Colors.white.withOpacity(0.7),
-                                            fontSize: 12,
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                cast.actorName,
+                                                style: const TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              Text(
+                                                cast.characterName,
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  color: Colors.white.withOpacity(0.7),
+                                                  fontSize: 10,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                );
-                              }).toList(),
-                            ),
+                                ),
+                              );
+                            },
                           ),
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => _handleDownload(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D3B66),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GlassContainer(
+                          height: 50,
+                          width: double.infinity,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+                          ),
+                          borderColor: Colors.white.withOpacity(0.3),
+                          blur: 10,
                           borderRadius: BorderRadius.circular(12),
+                          child: TextButton(
+                            onPressed: () => _handleDownload(context),
+                            child: const Text(
+                              'Download',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
-                        elevation: 4,
-                        shadowColor: Colors.blueAccent.withOpacity(0.3),
                       ),
-                      child: const Text(
-                        'Download',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: GlassContainer(
+                          height: 50,
+                          width: double.infinity,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.2),
+                              Colors.white.withOpacity(0.1),
+                            ],
+                          ),
+                          borderColor: Colors.white.withOpacity(0.3),
+                          blur: 10,
+                          borderRadius: BorderRadius.circular(12),
+                          child: TextButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Trailer coming soon!'),
+                                  backgroundColor: Color(0xFF1A2A44),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              'Watch Trailer',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),

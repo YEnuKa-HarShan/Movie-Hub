@@ -1,0 +1,14 @@
+[
+    {
+      "email": "yenuka@moviehub.com",
+      "password": "yenuka123",
+      "username": "Yenuka",
+      "role": "User"
+    },
+    {
+      "email": "admin@moviehub.com",
+      "password": "admin123",
+      "username": "Admin",
+      "role": "Admin"
+    }
+  ]

@@ -6,25 +6,27 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.2
+  sdk: '>=3.7.2 <3.8.0'
 
 
 dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.2.3
-
   url_launcher: ^6.3.0
   cupertino_icons: ^1.0.8
+  animate_do: ^3.3.4
+  glass_kit: ^3.0.0
+  flutter_staggered_grid_view: ^0.6.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   msix: ^2.1.1
 
-  flutter_lints: ^5.0.0
+  flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.13.1
-  http: ^1.3.0
+  http: ^1.2.2
 
 flutter_launcher_icons:
   image_path: "assets/Icon.png"
@@ -44,8 +46,12 @@ flutter:
     - assets/portrait/
     - assets/logo/
     - assets/actors/
+    - assets/background/
     - assets/Icon.png
     - assets/Background.jpg
+    - assets/users.json
+    - assets/movies.json
+    - assets/actors.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

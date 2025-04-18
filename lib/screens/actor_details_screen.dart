@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:animate_do/animate_do.dart';
+import 'package:glass_kit/glass_kit.dart';
 import '../models/movie.dart';
 import 'movie_details_screen.dart';
 
@@ -39,7 +41,7 @@ class _ActorDetailsScreenState extends State<ActorDetailsScreen> {
     final filteredMovies = movies.where((movie) => movie.cast.contains(widget.actor.name)).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1A2F),
+      backgroundColor: const Color(0xFF0F172A),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -47,14 +49,27 @@ class _ActorDetailsScreenState extends State<ActorDetailsScreen> {
             floating: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                widget.actor.name,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 20,
-                  shadows: [Shadow(color: Colors.black26, blurRadius: 4)],
+              title: GlassContainer(
+                height: 40,
+                width: 200,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.2),
+                    Colors.white.withOpacity(0.1),
+                  ],
+                ),
+                borderColor: Colors.white.withOpacity(0.3),
+                blur: 10,
+                borderRadius: BorderRadius.circular(12),
+                child: Text(
+                  widget.actor.name,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
                 ),
               ),
               background: Stack(
@@ -63,6 +78,13 @@ class _ActorDetailsScreenState extends State<ActorDetailsScreen> {
                   Image.asset(
                     'assets/actors/${widget.actor.image}',
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Actor image load error: $error');
+                      return Container(
+                        color: Colors.grey,
+                        child: const Icon(Icons.error, color: Colors.white),
+                      );
+                    },
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -71,7 +93,7 @@ class _ActorDetailsScreenState extends State<ActorDetailsScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          const Color(0xFF0A1A2F).withOpacity(0.9),
+                          const Color(0xFF0F172A).withOpacity(0.9),
                         ],
                       ),
                     ),
@@ -79,7 +101,7 @@ class _ActorDetailsScreenState extends State<ActorDetailsScreen> {
                 ],
               ),
             ),
-            backgroundColor: const Color(0xFF00203F),
+            backgroundColor: const Color(0xFF1A2A44),
             elevation: 4,
           ),
           SliverToBoxAdapter(
@@ -113,35 +135,9 @@ class _ActorDetailsScreenState extends State<ActorDetailsScreen> {
                           itemCount: filteredMovies.length,
                           itemBuilder: (context, index) {
                             final movie = filteredMovies[index];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: ListTile(
-                                leading: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.asset(
-                                    'assets/portrait/${movie.portrait}',
-                                    width: 50,
-                                    height: 75,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                title: Text(
-                                  movie.title,
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  movie.year,
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 14,
-                                  ),
-                                ),
+                            return FadeInUp(
+                              duration: const Duration(milliseconds: 300),
+                              child: InkWell(
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -150,6 +146,58 @@ class _ActorDetailsScreenState extends State<ActorDetailsScreen> {
                                     ),
                                   );
                                 },
+                                borderRadius: BorderRadius.circular(12),
+                                child: GlassContainer(
+                                  height: 100,
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withOpacity(0.2),
+                                      Colors.white.withOpacity(0.1),
+                                    ],
+                                  ),
+                                  borderColor: Colors.white.withOpacity(0.3),
+                                  blur: 10,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: ListTile(
+                                    leading: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.asset(
+                                        'assets/portrait/${movie.portrait}',
+                                        width: 50,
+                                        height: 75,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          print('Movie image load error: $error');
+                                          return Container(
+                                            width: 50,
+                                            height: 75,
+                                            color: Colors.grey,
+                                            child: const Icon(Icons.error, color: Colors.white),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    title: Text(
+                                      movie.title,
+                                      style: const TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      movie.year,
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        color: Colors.white.withOpacity(0.7),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             );
                           },
