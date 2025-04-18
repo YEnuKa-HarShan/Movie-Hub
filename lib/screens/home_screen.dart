@@ -234,15 +234,6 @@ class _HomeScreenState extends State<HomeScreen> {
               floating: true,
               pinned: true,
               flexibleSpace: FlexibleSpaceBar(
-                title: const Text(
-                  'MovieHub',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 24,
-                  ),
-                ),
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -262,62 +253,62 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: GlassContainer(
-                        height: 40, // Scaled down height
-                        width: 150, // Fixed width to avoid overlap
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.2),
-                            Colors.white.withOpacity(0.1),
-                          ],
-                        ),
-                        borderColor: Colors.white.withOpacity(0.3),
-                        blur: 10,
-                        borderRadius: BorderRadius.circular(20),
-                        child: TextField(
-                          controller: _searchController,
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.white,
-                            fontSize: 14, // Scaled down font size
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Search...',
-                            hintStyle: TextStyle(
-                              fontFamily: 'Poppins',
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 14,
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.search,
-                              color: Colors.white,
-                              size: 16, // Scaled down icon size
-                            ),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(
-                                      Icons.clear,
-                                      color: Colors.white,
-                                      size: 16, // Scaled down icon size
-                                    ),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      _filterMovies('');
-                                    },
-                                  )
-                                : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                          ),
-                          onChanged: _filterMovies,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
+                title: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: GlassContainer(
+                    height: 40,
+                    width: MediaQuery.of(context).size.width * 0.6, // 60% of screen width
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.2),
+                        Colors.white.withOpacity(0.1),
+                      ],
+                    ),
+                    borderColor: Colors.white.withOpacity(0.3),
+                    blur: 10,
+                    borderRadius: BorderRadius.circular(20),
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search...',
+                        hintStyle: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 14,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.clear,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _filterMovies('');
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                      ),
+                      onChanged: _filterMovies,
+                    ),
+                  ),
+                ),
+                titlePadding: EdgeInsets.zero, // Remove default padding to control spacing
               ),
               backgroundColor: const Color(0xFF1A2A44),
               leading: Builder(
