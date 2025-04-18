@@ -10,5 +10,77 @@
         "description": "vknvonojnbvdfbnnnbdg",
         "terabox_link": "coming soon",
         "cast": ["Ranbir Kapoor", "Rashmika Mandanna", "Anil Kapoor", "Tripti Dimri", "Bobby Deol"]
+    },
+    {
+        "id": "2",
+        "title": "Wonder Woman 1984",
+        "year": "2020",
+        "language": "English",
+        "portrait": "Wonder Woman 1984 2020.jpg",
+        "landscape": "Wonder Woman 1984 2020.jpg",
+        "genre": ["Action", "Drama"],
+        "description": "iudirnribnroor",
+        "terabox_link": "coming soon",
+        "cast": ["Gal Gadot"]
+    },
+    {
+        "id": "3",
+        "title": "Crakk",
+        "year": "2024",
+        "language": "Hindi",
+        "portrait": "Crakk 2024.jpg",
+        "landscape": "Crakk 2024.jpg",
+        "genre": ["Action", "Drama"],
+        "description": "iudirnribnroor",
+        "terabox_link": "coming soon",
+        "cast": ["Vidyut Jammwal"]
+    },
+    {
+        "id": "4",
+        "title": "Transformers",
+        "year": "2007",
+        "language": "English",
+        "portrait": "Transformers 2007.jpg",
+        "landscape": "Transformers 2007.jpg",
+        "genre": ["Action", "Adventure"],
+        "description": "Action Adventure",
+        "terabox_link": "coming soon",
+        "cast": ["Shia LaBeouf"]
+    },
+    {
+        "id": "5",
+        "title": "Transformers Dark of the Moon",
+        "year": "2011",
+        "language": "English",
+        "portrait": "Transformers 2011.jpg",
+        "landscape": "Transformers 2011.jpg",
+        "genre": ["Action", "Adventure"],
+        "description": "Action Adventure",
+        "terabox_link": "coming soon",
+        "cast": ["Shia LaBeouf"]
+    },
+    {
+        "id": "6",
+        "title": "Transformers Revenge of the Fallen",
+        "year": "2009",
+        "language": "English",
+        "portrait": "Transformers 2009.jpg",
+        "landscape": "Transformers 2009.jpg",
+        "genre": ["Action", "Adventure"],
+        "description": "Action Adventure",
+        "terabox_link": "coming soon",
+        "cast": ["Shia LaBeouf"]
+    },
+    {
+        "id": "7",
+        "title": "San Andreas",
+        "year": "2015",
+        "language": "English",
+        "portrait": "San Andreas 2015.jpg",
+        "landscape": "San Andreas 2015.jpg",
+        "genre": ["Action", "Adventure"],
+        "description": "Action Adventure",
+        "terabox_link": "coming soon",
+        "cast": ["Dwayne Johnson"]
     }
 ]
