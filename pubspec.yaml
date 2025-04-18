@@ -46,7 +46,7 @@ flutter:
     - assets/portrait/
     - assets/logo/
     - assets/actors/
-    - assets/background/
+    - assets/backgrounds/
     - assets/Icon.png
     - assets/Background.jpg
     - assets/users.json
