@@ -18,6 +18,8 @@ dependencies:
   animate_do: ^3.3.4
   glass_kit: ^3.0.0
   flutter_staggered_grid_view: ^0.6.2
+  flutter_staggered_animations: ^1.1.1
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -46,7 +48,7 @@ flutter:
     - assets/portrait/
     - assets/logo/
     - assets/actors/
-    - assets/background/
+    - assets/backgrounds/
     - assets/Icon.png
     - assets/Background.jpg
     - assets/users.json
